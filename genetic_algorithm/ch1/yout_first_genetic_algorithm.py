@@ -88,7 +88,11 @@ def plot_population(population, number_of_population):
     best = get_best(population)
     x = np.linspace(-10, 10)
     plt.plot(x, func(x), '--', color = 'blue')
-    plt.plot([ind.get_gene() for ind in population], [ind.fitness for ind in population], 'o', color = 'orange')
+    plt.plot(
+        [ind.get_gene() for ind in population],
+        [ind.fitness for ind in population],
+        'o', color = 'orange'
+        )
     plt.plot([best.get_gene()], [best.fitness], 's', color = 'green')
     plt.title(f"Generation number {number_of_population}")
     plt.show()
