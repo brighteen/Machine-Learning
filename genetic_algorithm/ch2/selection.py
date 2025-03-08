@@ -28,9 +28,11 @@ if __name__ == '__main__':
     POPULATION_SIZE = 5
 
     generation_1 = [create_random_individual() for _ in range(POPULATION_SIZE)]
+    # print('[debug] :', generation_1)
     generation_2 = select_tournament(generation_1, 3)
+    # print('\n[debug] :', generation_2)
 
-    print("Generation 1")
+    print("\nGeneration 1")
     [print(ind) for ind in generation_1]
 
     print("Generation 2")
