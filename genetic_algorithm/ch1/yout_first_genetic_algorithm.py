@@ -3,6 +3,15 @@ from typing import List
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+def func(x):
+    '''
+    역할: 유전 알고리즘의 평가 기준(적합도)을 계산함
+    설명: x에 대해 sin(x) - 0.2×|x| 값을 계산함
+    결과: 계산된 함수 값(적합도)을 반환함
+    '''
+    return np.sin(x) - .2 * abs(x)
+
 def _utils_constraints(g, min, max):
     '''
     역할: 입력된 값 g가 지정된 최소값(min)과 최대값(max) 범위를 넘지 않도록 조정함
@@ -15,11 +24,26 @@ def _utils_constraints(g, min, max):
         g = min
     return g
 
+def select_tournament(population, tournament_size):
+    '''
+    역할: 인구 집단에서 무작위로 몇 개체(토너먼트 후보)를 뽑고, 그 중 적합도가 가장 높은 개체를 선택함
+    설명:
+    - 전체 인구 수만큼 반복하면서, 매번 토너먼트 크기만큼 무작위 후보를 선택하고, 그 중 최고 적합도(즉, 함수값이 가장 높은)를 고름
+    결과: 선택된 개체들로 구성된 새로운 집단(리스트)을 반환함
+    '''
+    new_offspring = []
+    for _ in range(len(population)):
+        candidates = [random.choice(population) for _ in
+        range(tournament_size)]
+        new_offspring.append(max(candidates, key = lambda ind:
+        ind.fitness))
+    return new_offspring
+
 def crossover_blend(g1, g2, alpha, min = None, max = None):
     '''
     역할: 두 부모의 유전자 값(g1, g2)을 섞어 새로운 자식 유전자를 만들어냄
     설명:
-    - 먼저 무작위로 섞이는 정도(shift)를 결정함
+    - 먼저 무작위로 섞이는 정도(shift)를 결정함, random.random(0~1사이 무작위 값)
     - shift 값을 이용해 두 부모의 유전자를 일정 비율로 섞어 두 개의 자식 유전자를 계산함
     - 계산된 자식 유전자 값들이 지정된 범위(min, max)를 벗어나지 않도록 _utils_constraints 함수를 거침
     결과: 두 자식의 유전자 값을 튜플로 반환함
@@ -39,29 +63,6 @@ def mutate_gaussian(g, mu, sigma, min = None, max = None):
     '''
     mutated_gene = g + random.gauss(mu, sigma)
     return _utils_constraints(mutated_gene, min, max)
-
-def select_tournament(population, tournament_size):
-    '''
-    역할: 인구 집단에서 무작위로 몇 개체(토너먼트 후보)를 뽑고, 그 중 적합도가 가장 높은 개체를 선택함
-    설명:
-    - 전체 인구 수만큼 반복하면서, 매번 토너먼트 크기만큼 무작위 후보를 선택하고, 그 중 최고 적합도(즉, 함수값이 가장 높은)를 고름
-    결과: 선택된 개체들로 구성된 새로운 집단(리스트)을 반환함
-    '''
-    new_offspring = []
-    for _ in range(len(population)):
-        candidates = [random.choice(population) for _ in
-        range(tournament_size)]
-        new_offspring.append(max(candidates, key = lambda ind:
-        ind.fitness))
-    return new_offspring
-
-def func(x):
-    '''
-    역할: 유전 알고리즘의 평가 기준(적합도)을 계산함
-    설명: x에 대해 sin(x) - 0.2×|x| 값을 계산함
-    결과: 계산된 함수 값을 반환함
-    '''
-    return np.sin(x) - .2 * abs(x)
 
 def get_best(population):
     '''
