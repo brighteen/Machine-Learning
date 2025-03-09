@@ -124,7 +124,7 @@ class Individual: # 클래스 역할: 한 개체(해답 후보)를 나타내며,
         결과: 두 자식 개체를 반환함
         '''
         child1_gene, child2_gene = crossover_blend(parent1.get_gene(),
-        parent2.get_gene(), 1, -10, 10)
+        parent2.get_gene(), 1, -10, 10) # alpha = 1, min = -10, max = 10
         return Individual([child1_gene]), Individual([child2_gene])
     
     @classmethod
