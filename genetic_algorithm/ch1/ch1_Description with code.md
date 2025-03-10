@@ -15,7 +15,6 @@ GA(Genetic Algorithm)은 다음의 과정을 반복해 최적해를 탐색
 
 ---
 
-
 ```python
 def func(x):
     return np.sin(x) - .2 * abs(x)
