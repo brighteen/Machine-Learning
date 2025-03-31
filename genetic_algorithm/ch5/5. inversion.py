@@ -14,7 +14,7 @@ def mutation_inversion(ind): # 개체(ind, 리스트)를 인자로 받음음
     for i in range(0, (pos[1] - pos[0]) + 1):
         # 수식: new_gene[pos[0]+i] = original_gene[pos[1]-i]
         mut[pos[0] + i] = temp[pos[1] - i]
-        print(f'[debug] 기존 개체[{pos[0] + i}] = 변이 후 개체[{pos[1] - i}]')
+        print(f'[debug] mute_ind[{pos[0] + i}] = ind[{pos[1] - i}]')
     return mut
 
 if __name__ == '__main__':

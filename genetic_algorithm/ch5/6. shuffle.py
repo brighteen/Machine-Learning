@@ -10,12 +10,12 @@ def mutation_shuffle(ind):
     print(f'[debug] 두 인덱스를 선택(개체x) : {pos}')
     # 선택된 구간 [i, j]의 서브리스트 추출
     subrange = mut[pos[0]:pos[1] + 1]
-    print(f'[debug] 변이 전 서브리스트 : {subrange}')
+    print(f'[debug] subrange : {subrange}')
     # 추출된 서브리스트를 무작위로 섞음 (내부 순서 변화)
     random.shuffle(subrange)
     # 섞인 서브리스트를 원래 위치에 대입
     mut[pos[0]:pos[1] + 1] = subrange
-    print(f'[debug] 변이 후 서브리스트 : {mut[pos[0]:pos[1] + 1]}')
+    print(f'[debug] mute_range : {mut[pos[0]:pos[1] + 1]}')
     return mut
 
 if __name__ == '__main__':
