@@ -18,9 +18,11 @@ def mutation_inversion(ind): # 개체(ind, 리스트)를 인자로 받음음
     return mut
 
 if __name__ == '__main__':
-    random.seed(3)
+    random.seed(1)
     # 1부터 5까지의 숫자로 구성된 순열 개체 생성
-    ind = list(range(1, 6))
+    # ind = list(range(1, 6))
+    # ind = ['A', 'B', 'C', 'D', 'E']
+    ind = ['T1', 'T2', 'T3', 'T4', 'T5']
     mut = mutation_inversion(ind)
     print(f'Original: {ind}')
     print(f'Mutated: {mut}')

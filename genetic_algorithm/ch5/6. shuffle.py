@@ -21,7 +21,9 @@ def mutation_shuffle(ind):
 if __name__ == '__main__':
     random.seed(3)
     # 1부터 5까지의 숫자로 구성된 순열 개체 생성
-    ind = list(range(1, 6))
+    # ind = list(range(1, 6))
+    # ind = ['A', 'B', 'C', 'D', 'E']
+    ind = ['T1', 'T2', 'T3', 'T4', 'T5']
     mut = mutation_shuffle(ind)
     print(f'Original: {ind}')
     print(f'Mutated: {mut}')
