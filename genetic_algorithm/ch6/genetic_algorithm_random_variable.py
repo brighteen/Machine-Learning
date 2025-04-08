@@ -3,7 +3,7 @@ from typing import List
 import numpy as np
 import matplotlib.pyplot as plt
 
-from ch6.toolbox import (
+from toolbox import (
     crossover_blend, mutation_random_deviation, selection_tournament, crossover_operation,
     mutation_operation,
 )

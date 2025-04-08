@@ -3,7 +3,7 @@ from math import sin, cos
 from typing import List
 import matplotlib.pyplot as plt
 
-from ch6.toolbox import crossover_blend, mutation_random_deviation, selection_tournament
+from toolbox import crossover_blend, mutation_random_deviation, selection_tournament
 
 
 def func(x, y):
