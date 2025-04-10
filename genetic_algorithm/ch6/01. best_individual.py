@@ -40,7 +40,7 @@ def create_random():
     return Individual([random.uniform(-100, 100), random.uniform(-100, 100)])
 
 
-random.seed(28)
+random.seed(3)
 POPULATION_SIZE = 10
 CROSSOVER_PROBABILITY = .8
 MUTATION_PROBABILITY = .1
