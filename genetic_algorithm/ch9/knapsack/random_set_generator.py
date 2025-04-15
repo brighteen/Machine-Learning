@@ -1,7 +1,7 @@
 import random
 import matplotlib.pyplot as plt
 
-from knapsack.individual import Item
+from individual import Item
 
 
 def random_set_generator(min_price, max_price, min_weight, max_weight, total_number):

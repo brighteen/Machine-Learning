@@ -2,7 +2,7 @@ import copy
 import random
 import matplotlib.pyplot as plt
 
-from knapsack.individual import Item, Individual
+from individual import Item, Individual
 
 
 def selection_rank_with_elite(individuals, elite_size = 0):

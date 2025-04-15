@@ -4,7 +4,7 @@ from math import floor
 
 import matplotlib.pyplot as plt
 
-from radar.individual import Individual
+from individual import Individual
 
 
 def selection_rank_with_elite(individuals, elite_size = 0):

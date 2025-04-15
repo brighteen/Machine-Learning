@@ -1,9 +1,9 @@
 import random
 import matplotlib.pyplot as plt
-from knapsack.individual import Individual
-from knapsack.random_individual_shifted_zeros import create_random_individual
-from knapsack.random_set_generator import random_set_generator
-from knapsack.toolbox import (
+from individual import Individual
+from random_individual_shifted_zeros import create_random_individual
+from random_set_generator import random_set_generator
+from toolbox import (
     crossover_one_point, mutation_bit_flip, selection_rank_with_elite,
 )
 

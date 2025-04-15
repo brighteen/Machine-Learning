@@ -1,7 +1,7 @@
 import random
 
-from knapsack.individual import Individual
-from knapsack.random_set_generator import random_set_generator
+from individual import Individual
+from random_set_generator import random_set_generator
 
 if __name__ == '__main__':
     random.seed(1)

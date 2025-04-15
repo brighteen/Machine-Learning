@@ -1,8 +1,8 @@
 import copy
 import random
-from radar.individual import Individual
-from radar.landscape import SquareType, Square, generate_random_landscape, plot_coverage
-from radar.toolbox import (
+from individual import Individual
+from landscape import SquareType, Square, generate_random_landscape, plot_coverage
+from toolbox import (
     selection_rank_with_elite,
     crossover_operation,
     mutation_operation,

@@ -1,8 +1,8 @@
 import random
 
-from schedule.individual import Individual
-from schedule.schedule_analyzer import shift_deviations, shift_relax
-from schedule.toolbox import (
+from individual import Individual
+from schedule_analyzer import shift_deviations, shift_relax
+from toolbox import (
     crossover_n_point, selection_rank_with_elite, mutation_bit_flip, crossover_operation,
     mutation_operation, stats, plot_stats,
 )

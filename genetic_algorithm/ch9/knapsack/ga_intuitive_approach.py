@@ -1,6 +1,6 @@
 import random
-from knapsack.individual import Individual
-from knapsack.toolbox import (
+from individual import Individual
+from toolbox import (
     crossover_one_point, mutation_bit_flip, selection_rank_with_elite,
     get_items_from_my_room,
     crossover_operation,

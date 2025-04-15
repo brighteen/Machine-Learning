@@ -1,8 +1,8 @@
 import random
-from knapsack.individual import Individual
-from knapsack.random_individual_shifted_zeros import create_random_individual
-from knapsack.random_set_generator import random_set_generator
-from knapsack.toolbox import (
+from individual import Individual
+from random_individual_shifted_zeros import create_random_individual
+from random_set_generator import random_set_generator
+from toolbox import (
     selection_rank_with_elite, crossover_fitness_driven_one_point,
     mutation_fitness_driven_bit_flip,
     plot_stats,

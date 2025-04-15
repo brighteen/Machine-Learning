@@ -4,7 +4,7 @@ from math import floor
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from schedule.schedule_analyzer import shift_deviations, shift_relax
+from schedule_analyzer import shift_deviations, shift_relax
 
 
 class Individual:

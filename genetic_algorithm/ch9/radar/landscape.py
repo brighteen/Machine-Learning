@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib import colors, cm
 import matplotlib.patches as mpatches
 
-from radar.individual import Individual
+from individual import Individual
 
 
 class SquareType(Enum):

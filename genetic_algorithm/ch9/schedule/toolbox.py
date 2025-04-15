@@ -2,7 +2,7 @@ import copy
 import random
 import matplotlib.pyplot as plt
 
-from schedule.individual import Individual
+from individual import Individual
 
 
 def selection_rank_with_elite(individuals, elite_size = 0):

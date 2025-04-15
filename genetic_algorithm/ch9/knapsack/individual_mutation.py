@@ -1,8 +1,8 @@
 import random
 import matplotlib.pyplot as plt
-from knapsack.individual import Individual
-from knapsack.random_set_generator import random_set_generator
-from knapsack.toolbox import mutation_bit_flip
+from individual import Individual
+from random_set_generator import random_set_generator
+from toolbox import mutation_bit_flip
 
 
 def mutate(ind):
