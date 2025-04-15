@@ -1,51 +1,56 @@
 import random
 
-# 레이다 배치 문제용 개체 클래스
 class Individual:
-    counter = 0
-    rows = 0
-    cols = 0
+    counter = 0     # 생성된 개체 수를 카운트하는 클래스 변수
+    rows = 0        # 지형 행(row) 수 (외부에서 설정)
+    cols = 0        # 지형 열(col) 수 (외부에서 설정)
 
+    # fitness 함수를 설정하는 클래스 메서드
     @classmethod
     def set_fitness_function(cls, fun):
         cls.fitness_function = fun
 
-    # 랜드스케이프(지도) 행과 열 수 설정
+    # 랜덤 개체 생성 메서드:
+    # radar_prob 확률에 따라 각 셀에 레이더(1)를 배치하는 gene_list를 생성
     @classmethod
     def generate_random(cls, radar_prob):
-        # 전체 grid 크기 만큼 0으로 초기화한 후, radar_prob 확률로 1(레이다 설치) 선택
         gene_list = [0] * cls.rows * cls.cols
         for i in range(cls.rows * cls.cols):
             if random.random() < radar_prob:
                 gene_list[i] = 1
         return Individual(gene_list)
 
+    # 생성자: 주어진 gene_list로 개체 생성, fitness 계산 및 개체 카운트 증가
     def __init__(self, gene_list) -> None:
         self.gene_list = gene_list
-        # get_coordinates()로 지도 형태로 변환한 후 적합도 계산
+        # gene_list를 좌표 형식으로 변환하여 fitness 함수에 전달
         self.fitness = self.__class__.fitness_function(self.get_coordinates())
         self.__class__.counter += 1
 
-    # 1차원 벡터를 2차원 matrix(지도의 행렬)로 변환
+    # gene_list를 행렬(2차원 리스트)로 변환하여 좌표 정보를 반환
     def get_coordinates(self):
         r = self.__class__.rows
         c = self.__class__.cols
         matrix = [[None] * c for _ in range(r)]
         for i in range(r):
             for j in range(c):
+                # gene_list는 1차원 리스트이며, 각 셀에 해당하는 인덱스는 i * r + j
                 matrix[i][j] = self.gene_list[i * r + j]
         return matrix
 
-    # 설치한 레이다 총 개수 반환
+    # 레이더(1) 개수를 세서 반환
     def count_radars(self):
         return sum(self.gene_list)
 
 if __name__ == '__main__':
+    # 테스트용 설정: 지형의 크기를 50x50으로 설정
     Individual.rows = 50
     Individual.cols = 50
-    # 예시용 fintess_function (아직 정의되지 않음)
+
+    # 임시 fitness 함수 (아직 정의되지 않은 경우 0 반환)
     def fintess_function(coords):
         return 0
+
     Individual.set_fitness_function(fintess_function)
-    # 랜덤 개체 생성 테스트
-    ind = Individual.generate_random(0.01)
+    # 낮은 확률로 레이더를 배치한 랜덤 개체 생성
+    ind = Individual.generate_random(.01)
