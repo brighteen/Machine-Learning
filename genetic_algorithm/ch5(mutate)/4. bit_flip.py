@@ -14,9 +14,15 @@ def mutation_bit_flip(ind):
 
 # 예시 실행 코드
 if __name__ == '__main__':
-    random.seed(21)
+    random.seed(1)
     # 0 또는 1로 구성된 5길이 이진 개체 생성
     ind = [random.randint(0, 1) for _ in range(5)]
     mut = mutation_bit_flip(ind)
     print(f'Original: {ind}')
     print(f'Mutated: {mut}')
+    # 원본 개체와 돌연변이된 개체 비교
+    print(f'Original and Mutated are the same: {ind == mut}')
+    # 원본 개체와 돌연변이된 개체의 차이점 출력
+    for i in range(len(ind)):
+        if ind[i] != mut[i]:
+            print(f'Index {i}: Original {ind[i]} -> Mutated {mut[i]}')

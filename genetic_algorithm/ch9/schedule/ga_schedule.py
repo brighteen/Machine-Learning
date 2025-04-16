@@ -35,7 +35,9 @@ if __name__ == '__main__':
 
     # 스케줄 문제에서 사용할 파라미터 설정: 직원 수와 근무 기간 (여기서는 5명의 직원, 7일간의 스케줄)
     Individual.set_employees(3)
-    Individual.set_period(4)
+    Individual.set_period(3)
+    # 개체군의 크기 설정: 직원 수 * 근무 기간 * 3 (3은 근무조 수)
+    print(f'Gene List Length: {Individual.employees * Individual.period * 3}')
 
     # fitness 함수 정의: 스케줄 데이터프레임(df)을 입력받아, 근무 편차(shift_deviations)와 
     # 휴식 조건(shift_relax)을 평가하여 음수 값으로 반환 (값이 작을수록 좋은 스케줄)
@@ -53,13 +55,16 @@ if __name__ == '__main__':
     Individual.set_fitness_function(fitness_function)
 
     # 유전 알고리즘 관련 파라미터 설정
-    POPULATION_SIZE = 30
+    POPULATION_SIZE = 10
     CROSSOVER_PROBABILITY = .8
     MUTATION_PROBABILITY = .5
-    MAX_GENERATIONS = 20
+    MAX_GENERATIONS = 40
 
     # 초기 개체군 생성: 각 개체는 무작위 근무 스케줄(비트 문자열)로 생성됨
     first_population = [Individual.generate_random() for _ in range(POPULATION_SIZE)]
+    print(f'\n[debug]Initial Population Size: {len(first_population)}') # 초기 개체군 크기 출력(디버깅)
+    # print(f'[debug]Initial Population: {first_population}') # 초기 개체군 출력(디버깅)
+
     # 초기 최고 개체를 무작위로 선택
     best_ind = random.choice(first_population)
     fit_avg = []   # 각 세대별 평균 fitness 저장 리스트
@@ -72,6 +77,7 @@ if __name__ == '__main__':
         generation_num += 1
         # 선택 단계: 랭크 기반 선택 (엘리트 보존)
         offspring = select(population)
+
         # 교차 단계: 선택된 개체들에 대해 지정된 교차 확률로 교차 연산 수행
         crossed_offspring = crossover_operation(offspring, crossover, CROSSOVER_PROBABILITY)
         # 돌연변이 단계: 교차된 개체들에 대해 지정된 돌연변이 확률로 돌연변이 연산 수행
@@ -80,11 +86,18 @@ if __name__ == '__main__':
         # 현재 개체군의 통계(평균 fitness, 최고 fitness)를 업데이트
         best_ind, fit_avg, fit_best = stats(population, best_ind, fit_avg, fit_best)
 
+    print(f'\n[debug]Generation {generation_num}')
+    print(f'[debug]Best Individual: {best_ind}') # 최고 개체 출력(디버깅)
+    print(f'[debug]Best Fitness: {best_ind.fitness}') # 최고 fitness 출력(디버깅)
+    print(f'[debug]Best Schedule:\n{best_ind.create_schedule().T}') # 최고 스케줄 출력(디버깅)
+
+
     # 세대별 통계 플롯 출력 (평균 및 최고 fitness)
     plot_stats(fit_avg, fit_best, "Schedule Problem")
 
     # 최종 생성된 전체 개체 수 출력
-    print(f'Total Number of Individuals: {Individual.counter}')
-
+    print(f'\nTotal Number of Individuals: {Individual.counter}')
+    print(f'Gene List Length: {len(best_ind.gene_list)}')
+    print(f'\n최고 유전자:  {best_ind}')
     # 최고 개체의 스케줄을 시각화 (plot_schedule() 내부에서 matplotlib를 사용)
     best_ind.plot_schedule()

@@ -13,7 +13,7 @@ def selection_rank_with_elite(individuals, elite_size = 0):
         for j in range(len(sorted_individuals)):
             rank_sum += ranks[j]
             if rank_sum > shave:
-                selected.append(sorted_individuals[j])
+                selected.append(sorted_individuals[i])
                 break
 
     return selected
