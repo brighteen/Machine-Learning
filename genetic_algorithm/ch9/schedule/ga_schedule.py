@@ -10,28 +10,24 @@ from toolbox import (
     mutation_operation, stats, plot_stats,
 )
 
-  
+# 선택 함수: 개체군으로부터 엘리트 보존을 포함한 랭크 기반 선택을 수행  
+def select(population):
+    return selection_rank_with_elite(population, elite_size = 2)
+
 # 교차 함수: 부모 두 개체의 유전자 리스트에 대해 3-점 교차를 수행하고, 생성된 자식 개체 두 개 반환  
 def crossover(parent1, parent2):
     # 3개의 교차점을 선택하여 두 부모의 유전자 일부를 교환
     child1_genes, child2_genes = crossover_n_point(parent1.gene_list, parent2.gene_list, 3)
     return Individual(child1_genes), Individual(child2_genes)
 
-  
 # 돌연변이 함수: 부모의 유전자 리스트 중 한 위치를 단순 비트 플립하여 돌연변이 개체 생성  
 def mutate(ind):
     mutated_gene = mutation_bit_flip(ind.gene_list)
     return Individual(mutated_gene)
-
-  
-# 선택 함수: 개체군으로부터 엘리트 보존을 포함한 랭크 기반 선택을 수행  
-def select(population):
-    return selection_rank_with_elite(population, elite_size = 2)
-
   
 if __name__ == '__main__':
     # 난수 시드 설정 (실행 결과 재현 가능)
-    random.seed(3)
+    random.seed(1)
 
     # 스케줄 문제에서 사용할 파라미터 설정: 직원 수와 근무 기간 (여기서는 5명의 직원, 7일간의 스케줄)
     Individual.set_employees(3)
@@ -62,7 +58,7 @@ if __name__ == '__main__':
 
     # 초기 개체군 생성: 각 개체는 무작위 근무 스케줄(비트 문자열)로 생성됨
     first_population = [Individual.generate_random() for _ in range(POPULATION_SIZE)]
-    print(f'\n[debug]Initial Population Size: {len(first_population)}') # 초기 개체군 크기 출력(디버깅)
+    print(f'\n[debug] Initial Population Size: {len(first_population)}') # 초기 개체군 크기 출력(디버깅)
     # print(f'[debug]Initial Population: {first_population}') # 초기 개체군 출력(디버깅)
 
     # 초기 최고 개체를 무작위로 선택
@@ -86,11 +82,10 @@ if __name__ == '__main__':
         # 현재 개체군의 통계(평균 fitness, 최고 fitness)를 업데이트
         best_ind, fit_avg, fit_best = stats(population, best_ind, fit_avg, fit_best)
 
-    print(f'\n[debug]Generation {generation_num}')
-    print(f'[debug]Best Individual: {best_ind}') # 최고 개체 출력(디버깅)
-    print(f'[debug]Best Fitness: {best_ind.fitness}') # 최고 fitness 출력(디버깅)
-    print(f'[debug]Best Schedule:\n{best_ind.create_schedule().T}') # 최고 스케줄 출력(디버깅)
-
+    print(f'\n[debug] Generation {generation_num}')
+    print(f'[debug] Best Individual: {best_ind}') # 최고 개체 출력(디버깅)
+    print(f'[debug] Best Fitness: {best_ind.fitness}') # 최고 fitness 출력(디버깅)
+    print(f'[debug] Best Schedule:\n{best_ind.create_schedule().T}') # 최고 스케줄 출력(디버깅)
 
     # 세대별 통계 플롯 출력 (평균 및 최고 fitness)
     plot_stats(fit_avg, fit_best, "Schedule Problem")
@@ -98,6 +93,14 @@ if __name__ == '__main__':
     # 최종 생성된 전체 개체 수 출력
     print(f'\nTotal Number of Individuals: {Individual.counter}')
     print(f'Gene List Length: {len(best_ind.gene_list)}')
-    print(f'\n최고 유전자:  {best_ind}')
+    print(f'[debug] 최고 유전자:  {best_ind}')
     # 최고 개체의 스케줄을 시각화 (plot_schedule() 내부에서 matplotlib를 사용)
     best_ind.plot_schedule()
+
+# 각 세대마다 통계 정보를 상세하게 출력 (예: 최대, 최소, 평균, 표준편차)
+fitness_values = [ind.fitness for ind in population]
+gen_max = max(fitness_values)
+gen_min = min(fitness_values)
+gen_avg = sum(fitness_values) / len(fitness_values)
+gen_std = (sum((x - gen_avg) ** 2 for x in fitness_values) / len(fitness_values)) ** 0.5
+print(f'\n[debug] Generation fit_values {generation_num} | Max: {gen_max}, Min: {gen_min}, Avg: {gen_avg:.2f}, Std: {gen_std:.2f}')

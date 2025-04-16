@@ -74,8 +74,9 @@ class Individual:
   
 if __name__ == '__main__':
     # 테스트용: 직원 5명, 7일의 스케줄 생성
-    Individual.set_employees(5)
-    Individual.set_period(7)
+    random.seed(1)  # 난수 시드 설정 (재현 가능성)
+    Individual.set_employees(3)
+    Individual.set_period(3)
 
     # fitness 함수 정의: 근무 편차와 휴식 조건을 반영하여 음수 값 반환
     def fitness_function(df):
@@ -91,3 +92,7 @@ if __name__ == '__main__':
     # 무작위 스케줄 개체 생성 후 스케줄 플롯 출력
     ind = Individual.generate_random()
     ind.plot_schedule()
+    print(f'[debug] Fitness: {ind.fitness}')  # fitness 값 출력
+    print(f'[debug] Gene List Length: {len(ind.gene_list)}')  # gene_list 길이 출력
+    print(f'[debug] Gene List: {ind.gene_list}')  # gene_list 출력
+    print(f'[debug] Best Schedule:\n{ind.create_schedule().T}') # 최고 스케줄 출력(디버깅)
