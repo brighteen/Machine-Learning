@@ -10,10 +10,10 @@ def selection_rank_with_elite(individuals, elite_size = 0):
     for i in range(len(sorted_individuals) - elite_size):
         shave = random.random() * ranks_sum
         rank_sum = 0
-        for i in range(len(sorted_individuals)):
-            rank_sum += ranks[i]
+        for j in range(len(sorted_individuals)):
+            rank_sum += ranks[j]
             if rank_sum > shave:
-                selected.append(sorted_individuals[i])
+                selected.append(sorted_individuals[j])
                 break
 
     return selected

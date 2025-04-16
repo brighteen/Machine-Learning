@@ -34,8 +34,8 @@ if __name__ == '__main__':
     random.seed(3)
 
     # 스케줄 문제에서 사용할 파라미터 설정: 직원 수와 근무 기간 (여기서는 5명의 직원, 7일간의 스케줄)
-    Individual.set_employees(5)
-    Individual.set_period(7)
+    Individual.set_employees(3)
+    Individual.set_period(4)
 
     # fitness 함수 정의: 스케줄 데이터프레임(df)을 입력받아, 근무 편차(shift_deviations)와 
     # 휴식 조건(shift_relax)을 평가하여 음수 값으로 반환 (값이 작을수록 좋은 스케줄)
@@ -56,7 +56,7 @@ if __name__ == '__main__':
     POPULATION_SIZE = 30
     CROSSOVER_PROBABILITY = .8
     MUTATION_PROBABILITY = .5
-    MAX_GENERATIONS = 200
+    MAX_GENERATIONS = 20
 
     # 초기 개체군 생성: 각 개체는 무작위 근무 스케줄(비트 문자열)로 생성됨
     first_population = [Individual.generate_random() for _ in range(POPULATION_SIZE)]

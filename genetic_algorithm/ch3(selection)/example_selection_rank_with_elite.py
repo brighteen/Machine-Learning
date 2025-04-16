@@ -3,7 +3,7 @@ import random
 from selection_rank_with_elite import selection_rank_with_elite
 from individual import Individual
 
-POPULATION_SIZE = 5
+POPULATION_SIZE = 7
 random.seed(3)
 
 population = Individual.create_random_population(POPULATION_SIZE)
