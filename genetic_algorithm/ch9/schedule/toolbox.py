@@ -38,7 +38,7 @@ def crossover_n_point(p1, p2, n):
         c2[ps[i]:ps[i + 1]] = p1[ps[i]:ps[i + 1]]
     return [c1, c2]
 
-  
+
 # fitness-driven 한 점 교차 함수: 한 점 교차 후, 생성된 자식과 부모 중 fitness가 높은 두 개체를 반환  
 def crossover_fitness_driven_one_point(p1, p2):
     point = random.randint(1, len(p1.gene_list) - 1)
