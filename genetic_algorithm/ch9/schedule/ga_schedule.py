@@ -91,8 +91,8 @@ if __name__ == '__main__':
     plot_stats(fit_avg, fit_best, "Schedule Problem")
 
     # 최종 생성된 전체 개체 수 출력
-    print(f'\nTotal Number of Individuals: {Individual.counter}')
-    print(f'Gene List Length: {len(best_ind.gene_list)}')
+    print(f'\n[debug] Total Number of Individuals: {Individual.counter}')
+    print(f'[debug] Gene List Length: {len(best_ind.gene_list)}')
     print(f'[debug] 최고 유전자:  {best_ind}')
     # 최고 개체의 스케줄을 시각화 (plot_schedule() 내부에서 matplotlib를 사용)
     best_ind.plot_schedule()
