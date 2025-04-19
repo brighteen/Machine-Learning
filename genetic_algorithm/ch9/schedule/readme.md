@@ -1,4 +1,4 @@
-# 스케줄 문제 분석
+# HOW TO USE GA FOR SCHEDULE PROBLEM?
 
 ## 1. 문제 개요 및 목표
 **문제 정의:**  
