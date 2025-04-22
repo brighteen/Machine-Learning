@@ -6,7 +6,7 @@ from individual import Individual
 from schedule_analyzer import shift_deviations, shift_relax
 # 유전연산 관련 도구: n-점 교차, 랭크 선택, 단순 비트 플립 돌연변이, 교차/돌연변이 연산, 통계 및 플롯 함수들을 임포트
 from toolbox import (
-    crossover_n_point, selection_rank_with_elite, mutation_bit_flip, crossover_operation,
+    crossover_fitness_driven_one_point, selection_rank_with_elite, mutation_bit_flip, crossover_operation,
     mutation_operation, stats, plot_stats,
 )
 
@@ -14,11 +14,9 @@ from toolbox import (
 def select(population):
     return selection_rank_with_elite(population, elite_size = 2)
 
-# 교차 함수: 부모 두 개체의 유전자 리스트에 대해 3-점 교차를 수행하고, 생성된 자식 개체 두 개 반환  
+# 교차 함수: fitness 기반 한 점 교차 연산 수행
 def crossover(parent1, parent2):
-    # 3개의 교차점을 선택하여 두 부모의 유전자 일부를 교환
-    child1_genes, child2_genes = crossover_n_point(parent1.gene_list, parent2.gene_list, 3)
-    return Individual(child1_genes), Individual(child2_genes)
+    return crossover_fitness_driven_one_point(parent1, parent2)
 
 # 돌연변이 함수: 부모의 유전자 리스트 중 한 위치를 단순 비트 플립하여 돌연변이 개체 생성  
 def mutate(ind):
@@ -28,6 +26,7 @@ def mutate(ind):
 if __name__ == '__main__':
     # 난수 시드 설정 (실행 결과 재현 가능)
     random.seed(1)
+    print('[debug] crossover 2 one-point')
 
     # 스케줄 문제에서 사용할 파라미터 설정: 직원 수와 근무 기간 (여기서는 5명의 직원, 7일간의 스케줄)
     Individual.set_employees(3)

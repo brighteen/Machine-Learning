@@ -68,9 +68,9 @@ class Individual:
   
 if __name__ == '__main__':
     # 테스트용: 직원 5명, 7일의 스케줄 생성 및 플롯
-    random.seed(9)
+    random.seed(1)
     Individual.set_employees(3)
-    Individual.set_period(2)
+    Individual.set_period(3)
     # gene = employees * period * 3 = 3 * 2 * 3 = 18
     # 0과 1로 이루어진 길이 18의 리스트 생성
 
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     ind = Individual.generate_random()
     ind.plot_schedule()
     print(f'[debug] Gene List: {ind.gene_list}')
-    print(f'[debug] Gene List Length (employees(3) * period(2) * 3): {len(ind.gene_list)}')
+    print(f'[debug] Gene List Length (employees(3) * period(3) * 3): {len(ind.gene_list)}')
     print(f'[debug] Fitness: {ind.fitness}')
     print(f'[debug] Total Number of Individuals: {Individual.counter}')
     print(f'[debug] Period: {Individual.period}')
