@@ -54,6 +54,8 @@ if __name__ == '__main__':
     POPULATION_SIZE = 10
     CROSSOVER_PROBABILITY = .8
     MUTATION_PROBABILITY = .5
+    # MUTATION_PROBABILITY = 1 / (Individual.employees * Individual.period * 3) # 돌연변이 확률 1/L (L은 유전자 길이)
+    # print(f'[debug] Mutation Probability: {MUTATION_PROBABILITY:.4f}') # 돌연변이 확률 출력(디버깅)
     MAX_GENERATIONS = 40
 
     # 초기 개체군 생성: 각 개체는 무작위 근무 스케줄(비트 문자열)로 생성됨
