@@ -362,9 +362,15 @@ import copy, random
 
 def mutation_exchange(ind):
     mut = copy.deepcopy(ind)
-    pos = random.sample(range(len(mut)), 2)
-    mut[pos[0]], mut[pos[1]] = mut[pos[1]], mut[pos[0]]
-    return mut
+    if len(mut) < 2:
+        # 유전자가 하나인 경우 약간의 변화를 주기
+        mut[0] = mut[0] + random.gauss(0, 0.1)
+        return mut
+    else:
+        # 두 개 이상의 유전자가 있는 경우 교환
+        pos = random.sample(range(len(mut)), 2)
+        mut[pos[0]], mut[pos[1]] = mut[pos[1]], mut[pos[0]]
+        return mut
 
 
 
