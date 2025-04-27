@@ -1,5 +1,27 @@
-## 1. 선택 연산자 (Selection)
+def crossover_operation(population, method, prob):
+    crossed_offspring = []
+    for ind1, ind2 in zip(population[::2], population[1::2]):
+        if random.random() < prob:
+            kid1, kid2 = method(ind1, ind2)
+            crossed_offspring.append(kid1)
+            crossed_offspring.append(kid2)
+        else:
+            crossed_offspring.append(ind1)
+            crossed_offspring.append(ind2)
+    return crossed_offspring
 
+
+def mutation_operation(population, method, prob):
+    mutated_offspring = []
+    for mutant in population:
+        if random.random() < prob:
+            new_mutant = method(mutant)
+            mutated_offspring.append(new_mutant)
+        else:
+            mutated_offspring.append(mutant)
+    return mutated_offspring
+
+## 1. 선택 연산자 (Selection)
 
 # selection_proportional.py
 import random
@@ -414,13 +436,20 @@ class Individual:
 
 def mutation_fitness_driven_random_deviation(ind, mu, sigma, p, max_tries=3):
     for _ in range(max_tries):
-        mut_genes = copy.deepcopy(ind.gene_list)
-        for i in range(len(mut_genes)):
-            if random.random() < p:
-                mut_genes[i] += random.gauss(mu, sigma)
-        mut = Individual(mut_genes)
-        if mut.fitness > ind.fitness:
-            return mut
+        if isinstance(ind, list):
+            mut_genes = copy.deepcopy(ind)
+            for i in range(len(mut_genes)):
+                if random.random() < p:
+                    mut_genes[i] += random.gauss(mu, sigma)
+            return mut_genes
+        else:
+            mut_genes = copy.deepcopy(ind.gene_list)
+            for i in range(len(mut_genes)):
+                if random.random() < p:
+                    mut_genes[i] += random.gauss(mu, sigma)
+            mut = Individual(mut_genes)
+            if mut.fitness > ind.fitness:
+                return mut
     return ind
 
 
@@ -429,14 +458,22 @@ def mutation_fitness_driven_random_deviation(ind, mu, sigma, p, max_tries=3):
 import copy, random
 
 def mutation_fitness_driven_bit_flip(ind, max_tries=3):
-    for _ in range(max_tries):
-        mut = copy.deepcopy(ind.gene_list)
-        pos = random.randint(0, len(ind.gene_list)-1)
-        mut[pos] = (mut[pos] + 1) % 2
-        mutated = Individual(mut)
-        if mutated.fitness > ind.fitness:
-            return mutated
-    return ind
+    if isinstance(ind, list):
+        original = ind
+        for _ in range(max_tries):
+            mut = copy.deepcopy(original)
+            pos = random.randint(0, len(mut)-1)
+            mut[pos] = (mut[pos] + 1) % 2
+            return mut
+    else:
+        for _ in range(max_tries):
+            mut = copy.deepcopy(ind.gene_list)
+            pos = random.randint(0, len(mut)-1)
+            mut[pos] = (mut[pos] + 1) % 2
+            mutated = Individual(mut)
+            if mutated.fitness > ind.fitness:
+                return mutated
+    return ind if not isinstance(ind, list) else ind.gene_list
 
 
 
