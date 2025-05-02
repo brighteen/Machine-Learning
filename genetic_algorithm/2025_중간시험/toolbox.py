@@ -165,6 +165,36 @@ def crossover_one_point(p1, p2):
     c1[point:], c2[point:] = p2[point:], p1[point:]
     return [c1, c2]
 
+from math import nan
+
+def crossover_order(p1, p2):
+    zero_shift = min(p1)
+    length = len(p1)
+    start, end = sorted(random.sample(range(length), 2))
+    c1, c2 = [nan]*length, [nan]*length
+    t1 = [x-zero_shift for x in p1]
+    t2 = [x-zero_shift for x in p2]
+    spaces1 = [True]*length
+    spaces2 = [True]*length
+    for i in range(length):
+        if not (start <= i <= end):
+            spaces1[t2[i]] = False
+            spaces2[t1[i]] = False
+    j1 = j2 = end+1
+    for i in range(length):
+        idx1 = t1[(end + i + 1) % length]
+        idx2 = t2[(end + i + 1) % length]
+        if not spaces1[idx1]:
+            c1[j1 % length] = idx1
+            j1 += 1
+        if not spaces2[idx2]:
+            c2[j2 % length] = idx2
+            j2 += 1
+    for i in range(start, end+1):
+        c1[i], c2[i] = t2[i], t1[i]
+    child1 = [x+zero_shift for x in c1]
+    child2 = [x+zero_shift for x in c2]
+    return [child1, child2]
 
 def crossover_uniform(p1, p2, prop):
     c1, c2 = copy.copy(p1), copy.copy(p2)
@@ -172,7 +202,6 @@ def crossover_uniform(p1, p2, prop):
         if random.random() < prop:
             c1[i], c2[i] = p2[i], p1[i]
     return [c1, c2]
-
 
 # 4. Mutation operators
 
