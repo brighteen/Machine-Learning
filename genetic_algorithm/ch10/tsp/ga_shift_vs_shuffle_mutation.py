@@ -1,8 +1,8 @@
 import random
 import matplotlib.pyplot as plt
-from tsp.individual import Individual, generate_random
-from tsp.route import get_us_capitals
-from tsp.toolbox import (
+from individual import Individual, generate_random
+from route import get_us_capitals
+from toolbox import (
     crossover_fitness_driven_order, mutation_fitness_driven_shift, selection_rank_with_elite,
     crossover_operation,
     stats,

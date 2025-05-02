@@ -4,7 +4,7 @@ import random
 import matplotlib.pyplot as plt
 from math import nan, copysign
 
-from tsp.individual import Individual
+from individual import Individual
 
 
 def selection_rank_with_elite(individuals, elite_size = 0):

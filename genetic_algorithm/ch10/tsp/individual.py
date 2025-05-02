@@ -1,5 +1,5 @@
 import random
-from tsp.route import distance, get_us_capitals, plot_route
+from route import distance, get_us_capitals, plot_route
 
 
 class Individual:

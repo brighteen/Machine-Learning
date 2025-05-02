@@ -1,8 +1,8 @@
 import random
 
-from tsp.individual import Individual, generate_random
-from tsp.route import get_us_capitals, plot_route
-from tsp.toolbox import (
+from individual import Individual, generate_random
+from route import get_us_capitals, plot_route
+from toolbox import (
     crossover_fitness_driven_order, mutation_fitness_driven_shift, selection_rank_with_elite,
     crossover_operation,
     stats,
