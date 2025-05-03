@@ -8,8 +8,8 @@ plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
 
 # 시드 고정
-# np.random.seed(0)
-# random.seed(0)
+np.random.seed(0)
+random.seed(0)
 
 # --- 문제 데이터 ---
 days = ["Mon", "Tue", "Wed", "Thu", "Fri"]

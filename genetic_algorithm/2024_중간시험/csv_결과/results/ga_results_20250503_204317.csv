@@ -1,0 +1,7 @@
+﻿timestamp,encoding_type,bits,population_size,max_generations,initial_crossover_prob,final_crossover_prob,initial_mutation_prob,final_mutation_prob,elite_size,selection_method,crossover_method,crossover_params,mutation_method,mutation_params,run_generations,best_x,best_fx,binary_repr
+2025-05-03 20:43:17,real,,100,200,0.9,0.7,0.3,0.1,3,selection_rank_with_elite,crossover_blend,{'alpha': 0.5},mutation_random_deviation,"{'mu': 0, 'sigma': 1.0, 'p': 0.1}",14,-14.39,-9.131415248644535,
+2025-05-03 20:43:17,real,,100,200,0.9,0.7,0.3,0.1,3,selection_tournament,crossover_linear,{'alpha': 0.7},mutation_random_deviation,"{'mu': 0, 'sigma': 1.0, 'p': 0.1}",23,-14.002969467246174,-8.983502782293536,
+2025-05-03 20:43:17,real,,100,200,0.9,0.7,0.3,0.1,3,hybrid,crossover_uniform,{'prop': 0.5},mutation_fitness_driven_random_deviation,"{'mu': 0, 'sigma': 1.0, 'p': 0.1, 'max_tries': 3}",18,-14.346430166874717,-9.129583557732133,
+2025-05-03 20:43:17,binary,24,100,200,0.9,0.7,0.3,0.1,3,selection_rank_with_elite,crossover_one_point,{},mutation_bit_flip,{},24,-14.38980095264923,-9.131415269181204,111110101100101011111111
+2025-05-03 20:43:17,binary,24,100,200,0.9,0.7,0.3,0.1,3,selection_tournament,crossover_n_point,{'n': 2},mutation_bit_flip,{},27,-14.389859961254592,-9.131415271094014,111110101100101100100000
+2025-05-03 20:43:17,binary,24,100,200,0.9,0.7,0.3,0.1,3,hybrid,crossover_uniform,{'prop': 0.5},mutation_fitness_driven_bit_flip,{'max_tries': 3},22,-14.389847444277697,-9.131415271251722,111110101100101100011001

@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import pandas as pd
 from itertools import product
 from datetime import datetime
 import os
@@ -14,7 +15,7 @@ from toolbox import (
 
 def func(x):
     """최소화할 목적 함수: f(x) = 2sin(x) - 0.5x"""
-    return 2 * np.sin(x) - 0.5 * x
+    return 2 * np.sin(x) + 0.5 * x
 
 class RealIndividual:
     """실수 인코딩을 위한 클래스"""
@@ -69,7 +70,7 @@ class BinaryIndividual:
     def __str__(self):
         binary = ''.join(map(str, self.gene_list))
         return f'Binary: {binary}, x: {self.x:.4f}, f(x): {func(self.x):.4f}'
-    
+
 class AdaptiveGA:
     def __init__(self, encoding_type='real', population_size=50, max_generations=200,
                  initial_crossover_prob=0.9, final_crossover_prob=0.7,
@@ -226,14 +227,14 @@ experiment_settings = [
     }
 ]
 
-# 실험 실행
+# 결과 저장용 리스트
+all_results = []
+
 for setting in experiment_settings:
     print(f"\n{setting['encoding_type'].upper()} 인코딩 실험 시작...")
-    
     ga = AdaptiveGA(**setting)
-    results = []
-    
-    # 실수 인코딩용 연산자 조합
+
+    # 연산자 조합 정의 (기존과 동일)
     if setting['encoding_type'] == 'real':
         real_crossover_methods = [
             (crossover_blend, {'alpha': 0.5}),
@@ -249,7 +250,6 @@ for setting in experiment_settings:
             (selection_tournament, real_crossover_methods[1], real_mutation_methods[0]),
             ('hybrid', real_crossover_methods[2], real_mutation_methods[1]),
         ]
-    # 이진 인코딩용 연산자 조합
     else:
         binary_crossover_methods = [
             (crossover_one_point, {}),
@@ -265,82 +265,39 @@ for setting in experiment_settings:
             (selection_tournament, binary_crossover_methods[1], binary_mutation_methods[0]),
             ('hybrid', binary_crossover_methods[2], binary_mutation_methods[1]),
         ]
-    
-    for selection, crossover, mutation in combinations:
-        print(f"\n실행 중:")
-        print(f"- 연산자: {selection if isinstance(selection, str) else selection.__name__} / {crossover[0].__name__} / {mutation[0].__name__}")
-        
+
+    for idx, (selection, crossover, mutation) in enumerate(combinations, start=1):
+        print(f"\n실행 중: 연산자 {idx}")
         result = ga.run(selection, crossover, mutation)
-        results.append({
-            'selection': selection if isinstance(selection, str) else selection.__name__,
-            'crossover': crossover[0].__name__,
-            'mutation': mutation[0].__name__,
-            **result
+        # 결과를 딕셔너리로 저장
+        all_results.append({
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'encoding_type': setting['encoding_type'],
+            'bits': setting.get('bits', ''),
+            'population_size': setting['population_size'],
+            'max_generations': setting['max_generations'],
+            'initial_crossover_prob': setting['initial_crossover_prob'],
+            'final_crossover_prob': setting['final_crossover_prob'],
+            'initial_mutation_prob': setting['initial_mutation_prob'],
+            'final_mutation_prob': setting['final_mutation_prob'],
+            'elite_size': setting['elite_size'],
+            'selection_method': selection if isinstance(selection, str) else selection.__name__,
+            'crossover_method': crossover[0].__name__,
+            'crossover_params': crossover[1],
+            'mutation_method': mutation[0].__name__,
+            'mutation_params': mutation[1],
+            'run_generations': result['generations'],
+            'best_x': result['best_x'],
+            'best_fx': result['best_fx'],
+            'binary_repr': result.get('binary', '')
         })
-        
-        print(f"- 결과: 세대 수={result['generations']}, f(x)={result['best_fx']:.6f}, x={result['best_x']:.6f}")
-        if setting['encoding_type'] == 'binary':
-            print(f"- 이진 표현: {result['binary']}")
+      
+result_dir = r"C:\Users\brigh\Documents\GitHub\Machine-Learning\genetic_algorithm\2024_중간시험\csv_결과"
+# CSV 저장
+result_dir = os.path.join(result_dir, 'results')
+os.makedirs(result_dir, exist_ok=True)
 
-    # 결과 저장
-    result_dir = r"C:\Users\brigh\Documents\GitHub\Machine-Learning\genetic_algorithm\중간시험\결과"
-    
-    # 기존 파일에서 가장 큰 번호 찾기
-    def get_next_number(files):
-        max_num = 0
-        for f in files:
-            if f.startswith('개선된_ga_results_'):
-                try:
-                    # 파일 이름에서 숫자만 추출
-                    num_str = ''.join(c for c in f.split('_')[2] if c.isdigit())
-                    if num_str:
-                        max_num = max(max_num, int(num_str))
-                except ValueError:
-                    continue
-        return max_num + 1
-    
-    files = [f for f in os.listdir(result_dir) if f.endswith('.md')]
-    result_number = get_next_number(files)
-    
-    filename = os.path.join(result_dir, f'개선된_ga_results_{result_number}_{setting["encoding_type"]}.md')
-    
-    with open(filename, 'w', encoding='utf-8') as f:
-        f.write(f"# 개선된 유전 알고리즘 실험 결과 #{result_number} ({setting['encoding_type']} 인코딩)\n\n")
-        f.write(f"실험 일시: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
-        
-        f.write("## 실험 설정\n")
-        for key, value in setting.items():
-            f.write(f"- {key}: {value}\n")
-        f.write("\n## 실험 결과\n\n")
-        
-        sorted_results = sorted(results, key=lambda x: x['best_fx'])
-        
-        for i, result in enumerate(sorted_results, 1):
-            f.write(f"### 실험 {i}\n")
-            f.write(f"- 연산자 조합:\n")
-            f.write(f"  - 선택: {result['selection']}\n")
-            f.write(f"  - 교차: {result['crossover']}\n")
-            f.write(f"  - 돌연변이: {result['mutation']}\n")
-            f.write(f"- 결과:\n")
-            f.write(f"  - 수렴 세대 수: {result['generations']}\n")
-            f.write(f"  - 최소값 f(x): {result['best_fx']:.6f}\n")
-            f.write(f"  - 최적 x: {result['best_x']:.6f}\n")
-            if setting['encoding_type'] == 'binary':
-                f.write(f"  - 이진 표현: {result['binary']}\n")
-            f.write("\n")
-        
-        avg_generations = sum(r['generations'] for r in results) / len(results)
-        best_result = min(results, key=lambda x: x['best_fx'])
-        
-        f.write("## 통계 분석\n")
-        f.write(f"- 평균 수렴 세대 수: {avg_generations:.2f}\n")
-        f.write(f"- 전체 최소값: {best_result['best_fx']:.6f}\n")
-        f.write("- 최적의 연산자 조합:\n")
-        f.write(f"  - 선택 연산자: {best_result['selection']}\n")
-        f.write(f"  - 교차 연산자: {best_result['crossover']}\n")
-        f.write(f"  - 돌연변이 연산자: {best_result['mutation']}\n")
-        f.write(f"  - 최적 x: {best_result['best_x']:.6f}\n")
-        if setting['encoding_type'] == 'binary':
-            f.write(f"  - 이진 표현: {best_result['binary']}")
-
-    print(f"\n결과가 {filename} 파일에 저장되었습니다.")
+df = pd.DataFrame(all_results)
+filename = os.path.join(result_dir, f"ga_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv")
+df.to_csv(filename, index=False, encoding='utf-8-sig')
+print(f"\n결과가 CSV 파일로 저장되었습니다: {filename}")
