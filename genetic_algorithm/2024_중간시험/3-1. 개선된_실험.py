@@ -14,7 +14,7 @@ from toolbox import (
 )
 
 def func(x):
-    """최소화할 목적 함수: f(x) = 2sin(x) - 0.5x"""
+    """최소화할 목적 함수: f(x) = 2sin(x) + 0.5x"""
     return 2 * np.sin(x) + 0.5 * x
 
 class RealIndividual:
@@ -24,8 +24,8 @@ class RealIndividual:
             self.gene_list = gene_list.gene_list
         else:
             self.gene_list = gene_list if isinstance(gene_list, list) else [gene_list]
-        # 제약조건 적용: -15 ≤ x ≤ 15
-        self.gene_list[0] = max(min(self.gene_list[0], 15), -15)
+        # 제약조건 적용: -5 ≤ x ≤ 13
+        self.gene_list[0] = max(min(self.gene_list[0], 13), -5)
         # 최소값을 찾는 문제이므로 적합도는 함수값의 음수
         self.fitness = -func(self.gene_list[0])
 
@@ -36,8 +36,8 @@ class BinaryIndividual:
     """이진 인코딩을 위한 클래스"""
     def __init__(self, gene_list=None, bits=16):
         self.bits = bits
-        self.min_value = -15
-        self.max_value = 15
+        self.min_value = -5
+        self.max_value = 13
         
         if gene_list is None:
             # 랜덤 이진 문자열 생성
@@ -98,7 +98,7 @@ class AdaptiveGA:
     def create_individual(self):
         """실수/이진 인코딩에 따른 개체 생성"""
         if self.encoding_type == 'real':
-            return RealIndividual([random.uniform(-15, 15)])
+            return RealIndividual([random.uniform(-5, 13)])
         else:
             return BinaryIndividual(bits=self.bits)
 

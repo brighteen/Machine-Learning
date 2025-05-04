@@ -1,6 +1,9 @@
 import random
 import numpy as np
+import pandas as pd
 from itertools import product
+from datetime import datetime
+import os
 from toolbox import (
     selection_proportional, selection_rank, selection_rank_with_elite,
     selection_stochastic_universal_sampling, selection_tournament,
@@ -11,41 +14,57 @@ from toolbox import (
 )
 
 def func(x):
+    """최소화할 목적 함수: f(x) = 2sin(x) + 0.5x"""
     return 2 * np.sin(x) + 0.5 * x
 
 class RealIndividual:
+    """실수 인코딩을 위한 클래스"""
     def __init__(self, gene_list) -> None:
         if isinstance(gene_list, RealIndividual):
             self.gene_list = gene_list.gene_list
         else:
             self.gene_list = gene_list if isinstance(gene_list, list) else [gene_list]
+        # 제약조건 적용: -5 ≤ x ≤ 13
         self.gene_list[0] = max(min(self.gene_list[0], 13), -5)
+        # 최소값을 찾는 문제이므로 적합도는 함수값의 음수
         self.fitness = -func(self.gene_list[0])
 
     def __str__(self):
         return f'x: {self.gene_list[0]}, f(x): {func(self.gene_list[0])}'
 
 class BinaryIndividual:
+    """이진 인코딩을 위한 클래스"""
     def __init__(self, gene_list=None, bits=16):
         self.bits = bits
         self.min_value = -5
         self.max_value = 13
-
+        
         if gene_list is None:
+            # 랜덤 이진 문자열 생성
             self.gene_list = [random.randint(0, 1) for _ in range(bits)]
         else:
             self.gene_list = gene_list
-
+            
+        # 이진수를 실수로 디코딩
         self.x = self._decode_binary()
+        # 적합도 계산
         self.fitness = -func(self.x)
 
     def _decode_binary(self):
+        """이진 문자열을 실수값으로 변환"""
+        # 첫 비트는 부호 비트
         sign = -1 if self.gene_list[0] == 1 else 1
+        
+        # 나머지 비트로 값 계산
         value = 0
         for i, bit in enumerate(self.gene_list[1:], 1):
             value = value * 2 + bit
+            
+        # 값을 범위에 맞게 스케일링
         max_binary = 2 ** (self.bits - 1) - 1
         scaled = sign * (value / max_binary) * self.max_value
+        
+        # 범위 제한
         return max(min(scaled, self.max_value), self.min_value)
 
     def __str__(self):
@@ -183,115 +202,102 @@ class AdaptiveGA:
             'binary': ''.join(map(str, best_ever.gene_list)) if self.encoding_type == 'binary' else None
         }
 
-# 실험 파라미터 세트
-encoding_types = ['real', 'binary']
-population_sizes = [50, 100, 150]
-max_generations_list = [100, 200]
-initial_crossover_probs = [0.7, 0.8, 0.9]
-final_crossover_probs = [0.5, 0.6, 0.7]
-initial_mutation_probs = [0.2, 0.3, 0.4]
-final_mutation_probs = [0.05, 0.1, 0.2]
-elite_sizes = [1, 3, 5]
-bits_list = [16, 20, 24]
-
-# 선택 연산자 목록
-selection_methods = [
-    selection_proportional,
-    selection_rank,
-    selection_rank_with_elite,
-    selection_tournament,
-    selection_stochastic_universal_sampling,
-    'hybrid'
+# 실험 설정
+experiment_settings = [
+    {
+        'encoding_type': 'real',
+        'population_size': 100,
+        'max_generations': 200,
+        'initial_crossover_prob': 0.9,
+        'final_crossover_prob': 0.7,
+        'initial_mutation_prob': 0.3,
+        'final_mutation_prob': 0.1,
+        'elite_size': 3,
+    },
+    {
+        'encoding_type': 'binary',
+        'population_size': 100,
+        'max_generations': 200,
+        'initial_crossover_prob': 0.9,
+        'final_crossover_prob': 0.7,
+        'initial_mutation_prob': 0.3,
+        'final_mutation_prob': 0.1,
+        'elite_size': 3,
+        'bits': 24,
+    }
 ]
 
-# 실수 인코딩 교차 연산자 목록
-real_crossover_methods = [
-    (crossover_blend, {'alpha': 0.5}),
-    (crossover_linear, {'alpha': 0.7}),
-    (crossover_uniform, {'prop': 0.5})
-]
+# 결과 저장용 리스트
+all_results = []
 
-# 실수 인코딩 돌연변이 연산자 목록
-real_mutation_methods = [
-    (mutation_random_deviation, {'mu': 0, 'sigma': 1.0, 'p': 0.1}),
-    (mutation_fitness_driven_random_deviation, {'mu': 0, 'sigma': 1.0, 'p': 0.1, 'max_tries': 3})
-]
+for setting in experiment_settings:
+    print(f"\n{setting['encoding_type'].upper()} 인코딩 실험 시작...")
+    ga = AdaptiveGA(**setting)
 
-# 이진 인코딩 교차 연산자 목록
-binary_crossover_methods = [
-    (crossover_one_point, {}),
-    (crossover_n_point, {'n': 2}),
-    (crossover_n_point, {'n': 3}),
-    (crossover_uniform, {'prop': 0.5})
-]
+    # 연산자 조합 정의 (기존과 동일)
+    if setting['encoding_type'] == 'real':
+        real_crossover_methods = [
+            (crossover_blend, {'alpha': 0.5}),
+            (crossover_linear, {'alpha': 0.7}),
+            (crossover_uniform, {'prop': 0.5})
+        ]
+        real_mutation_methods = [
+            (mutation_random_deviation, {'mu': 0, 'sigma': 1.0, 'p': 0.1}),
+            (mutation_fitness_driven_random_deviation, {'mu': 0, 'sigma': 1.0, 'p': 0.1, 'max_tries': 3})
+        ]
+        combinations = [
+            (selection_rank_with_elite, real_crossover_methods[0], real_mutation_methods[0]),
+            (selection_tournament, real_crossover_methods[1], real_mutation_methods[0]),
+            ('hybrid', real_crossover_methods[2], real_mutation_methods[1]),
+        ]
+    else:
+        binary_crossover_methods = [
+            (crossover_one_point, {}),
+            (crossover_n_point, {'n': 2}),
+            (crossover_uniform, {'prop': 0.5})
+        ]
+        binary_mutation_methods = [
+            (mutation_bit_flip, {}),
+            (mutation_fitness_driven_bit_flip, {'max_tries': 3})
+        ]
+        combinations = [
+            (selection_rank_with_elite, binary_crossover_methods[0], binary_mutation_methods[0]),
+            (selection_tournament, binary_crossover_methods[1], binary_mutation_methods[0]),
+            ('hybrid', binary_crossover_methods[2], binary_mutation_methods[1]),
+        ]
 
-# 이진 인코딩 돌연변이 연산자 목록
-binary_mutation_methods = [
-    (mutation_bit_flip, {}),
-    (mutation_fitness_driven_bit_flip, {'max_tries': 3})
-]
+    for idx, (selection, crossover, mutation) in enumerate(combinations, start=1):
+        print(f"\n실행 중: 연산자 {idx}")
+        result = ga.run(selection, crossover, mutation)
+        # 결과를 딕셔너리로 저장
+        all_results.append({
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'encoding_type': setting['encoding_type'],
+            'bits': setting.get('bits', ''),
+            'population_size': setting['population_size'],
+            'max_generations': setting['max_generations'],
+            'initial_crossover_prob': setting['initial_crossover_prob'],
+            'final_crossover_prob': setting['final_crossover_prob'],
+            'initial_mutation_prob': setting['initial_mutation_prob'],
+            'final_mutation_prob': setting['final_mutation_prob'],
+            'elite_size': setting['elite_size'],
+            'selection_method': selection if isinstance(selection, str) else selection.__name__,
+            'crossover_method': crossover[0].__name__,
+            'crossover_params': crossover[1],
+            'mutation_method': mutation[0].__name__,
+            'mutation_params': mutation[1],
+            'run_generations': result['generations'],
+            'best_x': result['best_x'],
+            'best_fx': result['best_fx'],
+            'binary_repr': result.get('binary', '')
+        })
+      
+result_dir = r"C:\Users\brigh\Documents\GitHub\Machine-Learning\genetic_algorithm\2025_중간시험\csv_결과"
+# CSV 저장
+result_dir = os.path.join(result_dir, 'results')
+os.makedirs(result_dir, exist_ok=True)
 
-# 최적 결과 저장
-best_overall = None
-
-# 조합 반복 실행
-total_experiments = 0
-for encoding in encoding_types:
-    for pop_size in population_sizes:
-        for max_gen in max_generations_list:
-            for init_cp in initial_crossover_probs:
-                for final_cp in final_crossover_probs:
-                    for init_mp in initial_mutation_probs:
-                        for final_mp in final_mutation_probs:
-                            for elite in elite_sizes:
-                                for bits in bits_list if encoding == 'binary' else [None]:
-                                    for selection in selection_methods:
-                                        crossover_list = binary_crossover_methods if encoding == 'binary' else real_crossover_methods
-                                        mutation_list = binary_mutation_methods if encoding == 'binary' else real_mutation_methods
-
-                                        for crossover, crossover_param in crossover_list:
-                                            for mutation, mutation_param in mutation_list:
-                                                ga_params = {
-                                                    'encoding_type': encoding,
-                                                    'population_size': pop_size,
-                                                    'max_generations': max_gen,
-                                                    'initial_crossover_prob': init_cp,
-                                                    'final_crossover_prob': final_cp,
-                                                    'initial_mutation_prob': init_mp,
-                                                    'final_mutation_prob': final_mp,
-                                                    'elite_size': elite,
-                                                    'bits': bits if bits else 16
-                                                }
-                                                ga = AdaptiveGA(**ga_params)
-
-                                                result = ga.run(selection, (crossover, crossover_param), (mutation, mutation_param))
-
-                                                result_summary = {
-                                                    'encoding': encoding,
-                                                    'selection': selection if isinstance(selection, str) else selection.__name__,
-                                                    'crossover': crossover.__name__,
-                                                    'mutation': mutation.__name__,
-                                                    'crossover_params': crossover_param,
-                                                    'mutation_params': mutation_param,
-                                                    **result
-                                                }
-
-                                                total_experiments += 1
-
-                                                print(f"실험 {total_experiments}: {result_summary['encoding']} / {result_summary['selection']} / {result_summary['crossover']} / {result_summary['mutation']}")
-                                                print(f"- f(x): {result_summary['best_fx']:.6f}, x: {result_summary['best_x']:.6f}, 세대 수: {result_summary['generations']}")
-
-                                                if best_overall is None or result_summary['best_fx'] < best_overall['best_fx']:
-                                                    best_overall = result_summary
-
-# 최적 결과 출력
-print("\n===== 최적 결과 요약 =====")
-print(f"- 인코딩: {best_overall['encoding']}")
-print(f"- 선택: {best_overall['selection']}")
-print(f"- 교차: {best_overall['crossover']} {best_overall['crossover_params']}")
-print(f"- 돌연변이: {best_overall['mutation']} {best_overall['mutation_params']}")
-print(f"- 최적 x: {best_overall['best_x']:.6f}")
-print(f"- 최소 f(x): {best_overall['best_fx']:.6f}")
-print(f"- 세대 수: {best_overall['generations']}")
-if best_overall['encoding'] == 'binary':
-    print(f"- 이진 표현: {best_overall['binary']}")
+df = pd.DataFrame(all_results)
+filename = os.path.join(result_dir, f"ga_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv")
+df.to_csv(filename, index=False, encoding='utf-8-sig')
+print(f"\n결과가 CSV 파일로 저장되었습니다: {filename}")
