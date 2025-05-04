@@ -1,543 +1,431 @@
-def crossover_operation(population, method, prob):
-    crossed_offspring = []
-    for ind1, ind2 in zip(population[::2], population[1::2]):
-        if random.random() < prob:
-            kid1, kid2 = method(ind1, ind2)
-            crossed_offspring.append(kid1)
-            crossed_offspring.append(kid2)
-        else:
-            crossed_offspring.append(ind1)
-            crossed_offspring.append(ind2)
-    return crossed_offspring
+# Jupyter Notebook Cell 1: Toolbox Functions
+# 유전 알고리즘 연산자 함수 정의
 
-
-def mutation_operation(population, method, prob):
-    mutated_offspring = []
-    for mutant in population:
-        if random.random() < prob:
-            new_mutant = method(mutant)
-            mutated_offspring.append(new_mutant)
-        else:
-            mutated_offspring.append(mutant)
-    return mutated_offspring
-
-## 1. 선택 연산자 (Selection)
-
-# selection_proportional.py
 import random
+import copy
+import math
+import numpy as np
+
+# 1. Selection operators (선택 연산자)
 
 def selection_proportional(individuals):
-    sorted_individuals = sorted(individuals, key=lambda ind: ind.fitness, reverse=True)
-    fitness_sum = sum(ind.fitness for ind in individuals)
+    """적합도에 비례하여 개체 선택 (룰렛 휠)"""
+    total_fitness = sum(ind.fitness for ind in individuals)
+    n = len(individuals)
     selected = []
 
-    for _ in range(len(sorted_individuals)):
-        shave = random.random() * fitness_sum
-        roulette_sum = 0
-        for ind in sorted_individuals:
-            roulette_sum += ind.fitness
-            if roulette_sum > shave:
-                selected.append(ind)
-                break
+    if n == 0 or total_fitness <= 0:
+        return random.sample(individuals, n) if n > 0 else []
+
+    cumulative_fitness = np.cumsum([ind.fitness for ind in individuals])
+
+    for _ in range(n):
+        pick = random.random() * total_fitness
+        idx = np.searchsorted(cumulative_fitness, pick)
+        selected.append(individuals[idx])
 
     return selected
 
-
-
-# selection_rank.py
-import random
 
 def selection_rank(individuals):
-    sorted_individuals = sorted(individuals, key=lambda ind: ind.fitness, reverse=True)
-    rank_distance = 1 / len(individuals)
-    ranks = [(1 - i * rank_distance) for i in range(len(individuals))]
-    ranks_sum = sum(ranks)
-    selected = []
+    """적합도 순위에 따라 개체 선택"""
+    sorted_inds = sorted(individuals, key=lambda ind: ind.fitness, reverse=True)
+    n = len(sorted_inds)
+    if n == 0: return []
 
-    for _ in range(len(sorted_individuals)):
-        shave = random.random() * ranks_sum
-        rank_sum = 0
-        for i in range(len(sorted_individuals)):
-            rank_sum += ranks[i]
-            if rank_sum > shave:
-                selected.append(sorted_individuals[i])
-                break
+    ranks = [n - i for i in range(n)]
+    total_rank = sum(ranks)
+
+    selected = []
+    if total_rank == 0:
+         return random.sample(sorted_inds, n)
+
+    cumulative_ranks = np.cumsum(ranks)
+
+    for _ in range(n):
+        pick = random.random() * total_rank
+        idx = np.searchsorted(cumulative_ranks, pick)
+        selected.append(sorted_inds[idx])
 
     return selected
 
-
-
-# selection_rank_with_elite.py
-import random
 
 def selection_rank_with_elite(individuals, elite_size=0):
-    sorted_individuals = sorted(individuals, key=lambda ind: ind.fitness, reverse=True)
-    rank_distance = 1 / len(individuals)
-    ranks = [(1 - i * rank_distance) for i in range(len(individuals))]
-    ranks_sum = sum(ranks)
-    selected = sorted_individuals[:elite_size]
+    """랭크 선택 및 엘리트 보존"""
+    sorted_inds = sorted(individuals, key=lambda ind: ind.fitness, reverse=True)
+    n = len(sorted_inds)
+    if n == 0: return []
 
-    for _ in range(len(sorted_individuals) - elite_size):
-        shave = random.random() * ranks_sum
-        rank_sum = 0
-        for j in range(len(sorted_individuals)):
-            rank_sum += ranks[j]
-            if rank_sum > shave:
-                selected.append(sorted_individuals[j])
-                break
+    current_elite_size = min(elite_size, n)
+    elites = sorted_inds[:current_elite_size]
 
-    return selected
+    remaining_inds = sorted_inds[current_elite_size:]
+    n_remaining = len(remaining_inds)
 
+    selected_from_rest = []
+    if n_remaining > 0:
+        ranks = [n_remaining - i for i in range(n_remaining)]
+        total_rank = sum(ranks)
 
+        if total_rank == 0:
+             selected_from_rest = random.sample(remaining_inds, n_remaining)
+        else:
+            cumulative_ranks = np.cumsum(ranks)
+            for _ in range(n_remaining):
+                pick = random.random() * total_rank
+                idx = np.searchsorted(cumulative_ranks, pick)
+                selected_from_rest.append(remaining_inds[idx])
 
-# selection_stochastic_universal_sampling.py
-import random
+    return elites + selected_from_rest
+
 
 def selection_stochastic_universal_sampling(individuals):
-    sorted_individuals = sorted(individuals, key=lambda ind: ind.fitness, reverse=True)
-    fitness_sum = sum(ind.fitness for ind in individuals)
-
-    distance = fitness_sum / len(individuals)
-    shift = random.uniform(0, distance)
-    borders = [shift + i * distance for i in range(len(individuals))]
-
+    """확률적 만능 샘플링 (SUS)"""
+    total_fitness = sum(ind.fitness for ind in individuals)
+    n = len(individuals)
     selected = []
-    for border in borders:
-        i = 0
-        roulette_sum = sorted_individuals[i].fitness
-        while roulette_sum < border:
-            i += 1
-            roulette_sum += sorted_individuals[i].fitness
-        selected.append(sorted_individuals[i])
+
+    if n == 0 or total_fitness <= 0:
+        return random.sample(individuals, n) if n > 0 else []
+
+    slot_size = total_fitness / n
+    start_point = random.uniform(0, slot_size)
+    pointers = [start_point + i * slot_size for i in range(n)]
+
+    cumulative_fitness = np.cumsum([ind.fitness for ind in individuals])
+    ind_idx = 0
+    for pointer in pointers:
+        while ind_idx < n - 1 and cumulative_fitness[ind_idx] < pointer:
+            ind_idx += 1
+        selected.append(individuals[ind_idx])
 
     return selected
 
-
-
-# selection_tournament.py
-import random
 
 def selection_tournament(individuals, group_size=2):
+    """토너먼트 선택"""
     selected = []
-    for _ in range(len(individuals)):
-        candidates = [random.choice(individuals) for _ in range(group_size)]
-        selected.append(max(candidates, key=lambda ind: ind.fitness))
+    n = len(individuals)
+    if n == 0: return []
+    current_group_size = min(group_size, n)
+    if current_group_size < 1: current_group_size = 1
+
+    for _ in range(n):
+        participants = random.sample(individuals, current_group_size)
+        selected.append(max(participants, key=lambda ind: ind.fitness))
     return selected
 
 
+# 3. Crossover operators (교차 연산자)
+
+def crossover_blend(p1_genes, p2_genes, alpha):
+    """실수값 유전자에 대한 블렌드 교차 (BLX-alpha)"""
+    c1_genes, c2_genes = copy.copy(p1_genes), copy.copy(p2_genes)
+    for i in range(len(c1_genes)):
+        g1, g2 = float(p1_genes[i]), float(p2_genes[i])
+        diff = abs(g2 - g1)
+        low, high = min(g1, g2) - alpha * diff, max(g1, g2) + alpha * diff
+        c1_genes[i] = low + random.random() * (high - low)
+        c2_genes[i] = low + random.random() * (high - low)
+    return [c1_genes, c2_genes]
 
 
-## 2. 교차 연산자 (Crossover)
+def crossover_linear(p1_genes, p2_genes, alpha):
+    """실수값 유전자에 대한 선형 교차"""
+    c1_genes, c2_genes = copy.copy(p1_genes), copy.copy(p2_genes)
+    for i in range(len(c1_genes)):
+        g1, g2 = float(p1_genes[i]), float(p2_genes[i])
+        c1_genes[i] = alpha * g1 + (1 - alpha) * g2
+        c2_genes[i] = (1 - alpha) * g1 + alpha * g2
+    return [c1_genes, c2_genes]
 
 
-# blend.py (BLX-α)
-import copy, random
+def cycle_crossover(p1_genes, p2_genes):
+    """순열 기반 유전자에 대한 사이클 교차 (CX)"""
+    n = len(p1_genes)
+    if n != len(p2_genes):
+        raise ValueError("Parents must have the same length for cycle crossover.")
+    if n == 0: return [copy.copy(p1_genes), copy.copy(p2_genes)]
 
-def crossover_blend(p1, p2, alpha):
-    c1, c2 = copy.deepcopy(p1), copy.deepcopy(p2)
-    for i in range(len(p1)):
-        l = min(c1[i], c2[i]) - alpha * abs(c2[i] - c1[i])
-        u = max(c1[i], c2[i]) + alpha * abs(c2[i] - c1[i])
-        c1[i] = round(l + random.random() * (u - l), 2)
-        c2[i] = round(l + random.random() * (u - l), 2)
-    return [c1, c2]
+    c1_genes = [None] * n
+    c2_genes = [None] * n
+    visited = [False] * n
+
+    for start_index in range(n):
+        if not visited[start_index]:
+            cycle = []
+            current_index = start_index
+            while not visited[current_index]:
+                visited[current_index] = True
+                cycle.append(current_index)
+                value_in_p1 = p1_genes[current_index]
+                try:
+                    current_index = p2_genes.index(value_in_p1)
+                except ValueError:
+                     print(f"Warning: Value {value_in_p1} not found in parent 2 during cycle crossover.")
+                     break
+
+            for idx in cycle:
+                c1_genes[idx] = p1_genes[idx]
+                c2_genes[idx] = p2_genes[idx]
+
+    for i in range(n):
+        if c1_genes[i] is None:
+             c1_genes[i] = p2_genes[i]
+             c2_genes[i] = p1_genes[i]
+
+    if None in c1_genes or None in c2_genes:
+         print(f"Warning: None values remaining after order crossover. c1: {c1_genes}, c2: {c2_genes}")
+         available_genes = sorted(list(set(p1_genes) | set(p2_genes)))
+         fill_count = (c1_genes.count(None) + c2_genes.count(None))
+         if len(available_genes) >= fill_count:
+              temp_available_c1 = available_genes[:]
+              temp_available_c2 = available_genes[:]
+              c1_genes = [g if g is not None else temp_available_c1.pop(0) for g in c1_genes]
+              c2_genes = [g if g is not None else temp_available_c2.pop(0) for g in c2_genes]
+         else:
+              print("Error: Not enough available genes to fill None values.")
+
+    return [c1_genes, c2_genes]
 
 
+def crossover_n_point(p1_genes, p2_genes, n):
+    """N점 교차"""
+    length = len(p1_genes)
+    if length != len(p2_genes):
+        raise ValueError("Parents must have the same length for N-point crossover.")
+    if length < 2 or n <= 0: return [copy.copy(p1_genes), copy.copy(p2_genes)]
 
-# cycle.py
-def cycle_crossover(p1, p2):
-    length = len(p1)
-    c1, c2 = [None] * length, [None] * length
-    visited = [False] * length
-    cycle = 0
+    max_points = length - 1
+    num_points = min(n, max_points)
 
-    while not all(visited):
-        start = visited.index(False)
-        current = start
-        if cycle % 2 == 0:
-            while True:
-                c1[current] = p1[current]
-                c2[current] = p2[current]
-                visited[current] = True
-                current = p1.index(p2[current])
-                if current == start:
-                    break
+    if num_points == 0:
+        return [copy.copy(p1_genes), copy.copy(p2_genes)]
+
+    points = sorted(random.sample(range(1, length), num_points))
+
+    c1_genes, c2_genes = copy.copy(p1_genes), copy.copy(p2_genes)
+    swap = False
+
+    current_point_idx = 0
+    start = 0
+    while start < length:
+        end = length if current_point_idx >= len(points) else points[current_point_idx]
+
+        if swap:
+            c1_genes[start:end] = p2_genes[start:end]
+            c2_genes[start:end] = p1_genes[start:end]
         else:
-            while True:
-                c1[current] = p2[current]
-                c2[current] = p1[current]
-                visited[current] = True
-                current = p1.index(p2[current])
-                if current == start:
-                    break
-        cycle += 1
+            c1_genes[start:end] = p1_genes[start:end]
+            c2_genes[start:end] = p2_genes[start:end]
 
-    return c1, c2
+        start = end
+        swap = not swap
+        current_point_idx += 1
+
+    return [c1_genes, c2_genes]
 
 
-
-# fitness_driven.py (BLX-α + fitness filtering)
-import copy, random
-from math import sin, cos
-
-def fitness_function(x, y):
-    return sin(x) * cos(y)
-
-class Individual:
-    def __init__(self, x, y):
-        self.gene_set = [x, y]
-        self.fitness = fitness_function(x, y)
-
-def crossover_fitness_driven_blend(ind1, ind2, alpha):
-    c1 = copy.deepcopy(ind1.gene_set)
-    c2 = copy.deepcopy(ind2.gene_set)
-    for i in range(len(c1)):
-        l = min(c1[i], c2[i]) - alpha * abs(c2[i] - c1[i])
-        u = max(c1[i], c2[i]) + alpha * abs(c2[i] - c1[i])
-        c1[i] = round(l + random.random() * (u - l), 2)
-        c2[i] = round(l + random.random() * (u - l), 2)
-    child1 = Individual(c1[0], c1[1])
-    child2 = Individual(c2[0], c2[1])
-    candidates = [ind1, ind2, child1, child2]
-    best = sorted(candidates, key=lambda ind: ind.fitness, reverse=True)
-    return best[:2]
+def crossover_one_point(p1_genes, p2_genes):
+    """1점 교차"""
+    return crossover_n_point(p1_genes, p2_genes, 1)
 
 
+def crossover_order(p1_genes, p2_genes):
+    """순열 기반 유전자에 대한 순서 교차 (OX)"""
+    n = len(p1_genes)
+    if n != len(p2_genes):
+        raise ValueError("Parents must have the same length for order crossover.")
+    if n < 2: return [copy.copy(p1_genes), copy.copy(p2_genes)]
 
-# linear.py
-import copy, random
+    start, end = sorted(random.sample(range(n), 2))
 
-def crossover_linear(p1, p2, alpha):
-    c1, c2 = copy.deepcopy(p1), copy.deepcopy(p2)
-    for i in range(len(p1)):
-        c1[i] = round(p1[i] + alpha * (p2[i] - p1[i]), 2)
-        c2[i] = round(p2[i] - alpha * (p2[i] - p1[i]), 2)
-    return [c1, c2]
+    c1_genes = [None] * n
+    c2_genes = [None] * n
 
+    c1_genes[start:end+1] = p1_genes[start:end+1]
+    c2_genes[start:end+1] = p2_genes[start:end+1]
 
+    p1_remaining = [gene for gene in p1_genes if gene not in c2_genes[start:end+1]]
+    p2_remaining = [gene for gene in p2_genes if gene not in c1_genes[start:end+1]]
 
-# n_point.py
-import copy, random
+    p1_rem_idx = 0
+    p2_rem_idx = 0
+    for i in range(n):
+        child_idx = (end + 1 + i) % n
 
-def crossover_n_point(p1, p2, n):
-    ps = random.sample(range(1, len(p1) - 1), n) + [0, len(p1)]
-    ps = sorted(ps)
-    c1, c2 = copy.deepcopy(p1), copy.deepcopy(p2)
-    for i in range(n + 1):
-        if i % 2 == 1:
-            c1[ps[i]:ps[i+1]] = p2[ps[i]:ps[i+1]]
-            c2[ps[i]:ps[i+1]] = p1[ps[i]:ps[i+1]]
-    return [c1, c2]
+        if c1_genes[child_idx] is not None:
+             continue
 
+        while p2_rem_idx < len(p2_remaining) and p2_remaining[p2_rem_idx] in c1_genes:
+             p2_rem_idx += 1
+        if p2_rem_idx < len(p2_remaining):
+             c1_genes[child_idx] = p2_remaining[p2_rem_idx]
+             p2_rem_idx += 1
 
+    for i in range(n):
+        child_idx = (end + 1 + i) % n
+        if c2_genes[child_idx] is not None:
+             continue
 
-# one_point.py
-import copy, random
+        while p1_rem_idx < len(p1_remaining) and p1_remaining[p1_rem_idx] in c2_genes:
+             p1_rem_idx += 1
+        if p1_rem_idx < len(p1_remaining):
+             c2_genes[child_idx] = p1_remaining[p1_rem_idx]
+             p1_rem_idx += 1
 
-def crossover_one_point(p1, p2):
-    point = random.randint(1, len(p1) - 1)
-    c1, c2 = copy.deepcopy(p1), copy.deepcopy(p2)
-    c1[point:], c2[point:] = p2[point:], p1[point:]
-    return [c1, c2]
+    if None in c1_genes or None in c2_genes:
+         print(f"Warning: None values remaining after order crossover. c1: {c1_genes}, c2: {c2_genes}")
+         available_genes = sorted(list(set(p1_genes) | set(p2_genes)))
+         fill_count = (c1_genes.count(None) + c2_genes.count(None))
+         if len(available_genes) >= fill_count:
+              temp_available_c1 = available_genes[:]
+              temp_available_c2 = available_genes[:]
+              c1_genes = [g if g is not None else temp_available_c1.pop(0) for g in c1_genes]
+              c2_genes = [g if g is not None else temp_available_c2.pop(0) for g in c2_genes]
+         else:
+              print("Error: Not enough available genes to fill None values.")
 
-
-
-# order.py
-import random
-from math import nan
-
-def crossover_order(p1, p2):
-    zero_shift = min(p1)
-    length = len(p1)
-    start, end = sorted(random.sample(range(length), 2))
-    c1, c2 = [nan]*length, [nan]*length
-    t1 = [x-zero_shift for x in p1]
-    t2 = [x-zero_shift for x in p2]
-    spaces1 = [True]*length
-    spaces2 = [True]*length
-    for i in range(length):
-        if not (start <= i <= end):
-            spaces1[t2[i]] = False
-            spaces2[t1[i]] = False
-    j1 = j2 = end+1
-    for i in range(length):
-        idx1 = t1[(end + i + 1) % length]
-        idx2 = t2[(end + i + 1) % length]
-        if not spaces1[idx1]:
-            c1[j1 % length] = idx1
-            j1 += 1
-        if not spaces2[idx2]:
-            c2[j2 % length] = idx2
-            j2 += 1
-    for i in range(start, end+1):
-        c1[i], c2[i] = t2[i], t1[i]
-    child1 = [x+zero_shift for x in c1]
-    child2 = [x+zero_shift for x in c2]
-    return [child1, child2]
+    return [c1_genes, c2_genes]
 
 
+def crossover_uniform(p1_genes, p2_genes, prop):
+    """균일 교차"""
+    n = len(p1_genes)
+    if n != len(p2_genes):
+        raise ValueError("Parents must have the same length for uniform crossover.")
+    if n == 0: return [copy.copy(p1_genes), copy.copy(p2_genes)]
 
-# uniform.py
-import copy, random
-
-def crossover_uniform(p1, p2, prop):
-    c1, c2 = copy.deepcopy(p1), copy.deepcopy(p2)
-    for i in range(len(p1)):
+    c1_genes, c2_genes = copy.copy(p1_genes), copy.copy(p2_genes)
+    for i in range(n):
         if random.random() < prop:
-            c1[i], c2[i] = p2[i], p1[i]
-    return [c1, c2]
+            c1_genes[i], c2_genes[i] = p2_genes[i], p1_genes[i]
+    return [c1_genes, c2_genes]
 
 
+# 4. Mutation operators (돌연변이 연산자)
 
-# fitness-driven one-point crossover
-import copy, random
-
-def crossover_fitness_driven_one_point(p1, p2):
-    point = random.randint(1, len(p1.gene_list) - 1)
-    c1 = copy.deepcopy(p1.gene_list)
-    c2 = copy.deepcopy(p2.gene_list)
-    c1[point:], c2[point:] = p2.gene_list[point:], p1.gene_list[point:]
-    child1 = Individual(c1)
-    child2 = Individual(c2)
-    candidates = [child1, child2, p1, p2]
-    best = sorted(candidates, key=lambda ind: ind.fitness, reverse=True)
-    return best[:2]
-
-
-
-# fitness-driven order crossover
-import copy, random
-from math import nan
-
-def crossover_fitness_driven_order(ind1, ind2):
-    p1, p2 = ind1.gene_list, ind2.gene_list
-    zero_shift = min(p1)
-    length = len(p1)
-    start, end = sorted(random.sample(range(length), 2))
-    c1, c2 = [nan]*length, [nan]*length
-    t1 = [x-zero_shift for x in p1]
-    t2 = [x-zero_shift for x in p2]
-    spaces1 = [True]*length
-    spaces2 = [True]*length
-    for i in range(length):
-        if not (start <= i <= end):
-            spaces1[t2[i]] = False
-            spaces2[t1[i]] = False
-    j1 = j2 = end+1
-    for i in range(length):
-        idx1 = t1[(end + i + 1) % length]
-        idx2 = t2[(end + i + 1) % length]
-        if not spaces1[idx1]:
-            c1[j1 % length] = idx1; j1 += 1
-        if not spaces2[idx2]:
-            c2[j2 % length] = idx2; j2 += 1
-    for i in range(start, end+1):
-        c1[i], c2[i] = t2[i], t1[i]
-    child1 = Individual([x+zero_shift for x in c1])
-    child2 = Individual([x+zero_shift for x in c2])
-    candidates = [child1, child2, ind1, ind2]
-    best = sorted(candidates, key=lambda ind: ind.fitness, reverse=True)
-    return best[:2]
-
-
-
-
-## 3. 돌연변이 연산자 (Mutation)
-
-
-# random_deviation.py
-import copy, random
-
-def mutation_random_deviation(ind, mu, sigma, p):
-    mut = copy.deepcopy(ind)
-    for i in range(len(mut)):
+def mutation_random_deviation(ind_genes, mu, sigma, p):
+    """실수값 유전자에 대한 랜덤 편차 돌연변이"""
+    m_genes = copy.copy(ind_genes)
+    for i in range(len(m_genes)):
         if random.random() < p:
-            mut[i] = mut[i] + random.gauss(mu, sigma)
-    return mut
+            m_genes[i] += random.gauss(mu, sigma)
+    return m_genes
 
 
-
-# exchange.py
-import copy, random
-
-def mutation_exchange(ind):
-    mut = copy.deepcopy(ind)
-    if len(mut) < 2:
-        # 유전자가 하나인 경우 약간의 변화를 주기
-        mut[0] = mut[0] + random.gauss(0, 0.1)
-        return mut
+def mutation_exchange(ind_genes):
+    """교환 돌연변이 (Swap Mutation)"""
+    m_genes = copy.copy(ind_genes)
+    n = len(m_genes)
+    if n < 2:
+        return m_genes
     else:
-        # 두 개 이상의 유전자가 있는 경우 교환
-        pos = random.sample(range(len(mut)), 2)
-        mut[pos[0]], mut[pos[1]] = mut[pos[1]], mut[pos[0]]
-        return mut
+        i, j = random.sample(range(n), 2)
+        m_genes[i], m_genes[j] = m_genes[j], m_genes[i]
+    return m_genes
 
 
+def mutation_shift(ind_genes):
+    """이동 돌연변이 (Shift Mutation)"""
+    m_genes = copy.copy(ind_genes)
+    n = len(m_genes)
+    if n < 2:
+         return m_genes
 
-# shift.py
-import copy, random
-from math import copysign
+    from_idx = random.randint(0, n - 1)
+    to_idx = random.randint(0, n - 1)
 
-def mutation_shift(ind):
-    mut = copy.deepcopy(ind)
-    pos = random.sample(range(len(mut)), 2)
-    g1 = mut[pos[0]]
-    dir = int(copysign(1, pos[1] - pos[0]))
-    for i in range(pos[0], pos[1], dir):
-        mut[i] = mut[i + dir]
-    mut[pos[1]] = g1
-    return mut
+    if from_idx == to_idx:
+        return m_genes
 
+    segment = m_genes.pop(from_idx)
+    m_genes.insert(to_idx, segment)
 
-
-# bit_flip.py
-import copy, random
-
-def mutation_bit_flip(ind):
-    mut = copy.deepcopy(ind)
-    pos = random.randint(0, len(ind)-1)
-    mut[pos] = (mut[pos] + 1) % 2
-    return mut
+    return m_genes
 
 
-
-# inversion.py
-import copy, random
-
-def mutation_inversion(ind):
-    mut = copy.deepcopy(ind)
-    temp = copy.deepcopy(ind)
-    pos = sorted(random.sample(range(len(mut)), 2))
-    for i in range(pos[1] - pos[0] + 1):
-        mut[pos[0]+i] = temp[pos[1]-i]
-    return mut
+def mutation_bit_flip(ind_genes):
+    """비트 플립 돌연변이 (이진 유전자)"""
+    m_genes = copy.copy(ind_genes)
+    n = len(m_genes)
+    if n == 0: return m_genes
+    i = random.randint(0, n - 1)
+    m_genes[i] = 1 - m_genes[i]
+    return m_genes
 
 
+def mutation_inversion(ind_genes):
+    """역전 돌연변이 (Inversion Mutation)"""
+    m_genes = copy.copy(ind_genes)
+    n = len(m_genes)
+    if n < 2:
+         return m_genes
 
-# shuffle.py
-import copy, random
+    i, j = sorted(random.sample(range(n), 2))
+    m_genes[i:j+1] = list(reversed(m_genes[i:j+1]))
 
-def mutation_shuffle(ind):
-    mut = copy.deepcopy(ind)
-    pos = sorted(random.sample(range(len(mut)), 2))
-    subrange = mut[pos[0]:pos[1]+1]
-    random.shuffle(subrange)
-    mut[pos[0]:pos[1]+1] = subrange
-    return mut
+    return m_genes
 
 
+def mutation_shuffle(ind_genes):
+    """셔플 돌연변이 (Shuffle Mutation)"""
+    m_genes = copy.copy(ind_genes)
+    n = len(m_genes)
+    if n < 2:
+         return m_genes
 
-# fitness_driven random deviation
-import copy, random
-from math import sin
-from typing import List
+    i, j = sorted(random.sample(range(n), 2))
+    sub_segment = m_genes[i:j+1]
+    random.shuffle(sub_segment)
+    m_genes[i:j+1] = sub_segment
 
-def func(x):
-    return sin(x) - .2 * abs(x)
+    return m_genes
 
-class Individual:
-    def __init__(self, gene_list: List[float]):
-        self.gene_list = gene_list
-        self.fitness = func(self.gene_list[0])
+
+# 5. Fitness-driven operators (적합도 기반 연산자)
 
 def mutation_fitness_driven_random_deviation(ind, mu, sigma, p, max_tries=3):
+    """적합도 기반 랜덤 편차 돌연변이"""
+    IndividualClass = type(ind)
+    init_params = {}
+    if hasattr(ind, 'bits'):
+        init_params['bits'] = ind.bits
+        init_params['min_value'] = ind.min_value
+        init_params['max_value'] = ind.max_value
+    else:
+        init_params['min_value'] = ind.min_value
+        init_params['max_value'] = ind.max_value
+
+    current_best_mutant = ind
+
     for _ in range(max_tries):
-        if isinstance(ind, list):
-            mut_genes = copy.deepcopy(ind)
-            for i in range(len(mut_genes)):
-                if random.random() < p:
-                    mut_genes[i] += random.gauss(mu, sigma)
-            return mut_genes
-        else:
-            mut_genes = copy.deepcopy(ind.gene_list)
-            for i in range(len(mut_genes)):
-                if random.random() < p:
-                    mut_genes[i] += random.gauss(mu, sigma)
-            mut = Individual(mut_genes)
-            if mut.fitness > ind.fitness:
-                return mut
-    return ind
+        mutated_genes = mutation_random_deviation(ind.gene_list, mu, sigma, p)
+        new_mutant = IndividualClass(mutated_genes, **init_params)
+        if new_mutant.fitness > current_best_mutant.fitness:
+            current_best_mutant = new_mutant
 
+    return current_best_mutant
 
-
-# fitness_driven bit flip
-import copy, random
 
 def mutation_fitness_driven_bit_flip(ind, max_tries=3):
-    if isinstance(ind, list):
-        original = ind
-        for _ in range(max_tries):
-            mut = copy.deepcopy(original)
-            pos = random.randint(0, len(mut)-1)
-            mut[pos] = (mut[pos] + 1) % 2
-            return mut
+    """적합도 기반 비트 플립 돌연변이"""
+    IndividualClass = type(ind)
+    init_params = {}
+    if hasattr(ind, 'bits'):
+        init_params['bits'] = ind.bits
+        init_params['min_value'] = ind.min_value
+        init_params['max_value'] = ind.max_value
     else:
-        for _ in range(max_tries):
-            mut = copy.deepcopy(ind.gene_list)
-            pos = random.randint(0, len(mut)-1)
-            mut[pos] = (mut[pos] + 1) % 2
-            mutated = Individual(mut)
-            if mutated.fitness > ind.fitness:
-                return mutated
-    return ind if not isinstance(ind, list) else ind.gene_list
+         print("Error: mutation_fitness_driven_bit_flip applied to non-binary individual.")
+         return ind
 
+    current_best_mutant = ind
 
-
-# mutation_shift_one (1 비트 이동)
-import copy, random
-from math import floor
-
-def mutation_shift_one(ind):
-    mut = copy.deepcopy(ind.gene_list)
-    one_poses = [i for i,v in enumerate(mut) if v==1]
-    one_pos = random.choice(one_poses)
-    x_coord = one_pos % ind.rows
-    y_coord = floor(one_pos / ind.rows)
-    x_shifted = max(min(x_coord + random.randint(-10,10), ind.cols-1),0)
-    y_shifted = max(min(y_coord + random.randint(-10,10), ind.rows-1),0)
-    mut[y_shifted*ind.rows + x_shifted] = 1
-    mut[one_pos] = 0
-    return mut
-
-# mutation_bit_flip_ones (1 비트 중 무작위 비트 플립)
-import copy, random
-
-def mutation_bit_flip_ones(ind):
-    mut = copy.deepcopy(ind)
-    one_positions = [i for i,v in enumerate(mut) if v==1]
-    flip_index = random.choice(one_positions)
-    mut[flip_index] = (mut[flip_index] + 1) % 2
-    return mut
-
-# fitness_driven shift
-import copy, random
-from math import copysign
-
-def mutation_fitness_driven_shift(ind, max_tries=3):
     for _ in range(max_tries):
-        mut = copy.deepcopy(ind.gene_list)
-        pos = random.sample(range(len(mut)), 2)
-        g1 = mut[pos[0]]
-        dir = int(copysign(1, pos[1] - pos[0]))
-        for i in range(pos[0], pos[1], dir):
-            mut[i] = mut[i + dir]
-        mut[pos[1]] = g1
-        mutated = Individual(mut)
-        if mutated.fitness > ind.fitness:
-            return mutated
-    return ind
+        mutated_genes = mutation_bit_flip(ind.gene_list)
+        new_mutant = IndividualClass(mutated_genes, **init_params)
+        if new_mutant.fitness > current_best_mutant.fitness:
+            current_best_mutant = new_mutant
 
-# fitness_driven shuffle
-import copy, random
-
-def mutation_fitness_driven_shuffle(ind, max_tries=3):
-    for _ in range(max_tries):
-        mut = copy.deepcopy(ind.gene_list)
-        pos = sorted(random.sample(range(len(mut)), 2))
-        sub = mut[pos[0]:pos[1]+1]
-        random.shuffle(sub)
-        mut[pos[0]:pos[1]+1] = sub
-        mutated = Individual(mut)
-        if mutated.fitness > ind.fitness:
-            return mutated
-    return ind
+    return current_best_mutant
