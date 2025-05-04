@@ -10,6 +10,11 @@ import os
 import multiprocessing
 import time
 
+from toolbox import (selection_proportional, selection_rank, selection_rank_with_elite, selection_stochastic_universal_sampling, selection_tournament, 
+                     crossover_blend, crossover_linear, crossover_n_point, crossover_one_point, crossover_uniform,
+                     mutation_random_deviation, mutation_exchange, mutation_shift, mutation_bit_flip, mutation_inversion, mutation_shuffle, 
+                     mutation_fitness_driven_random_deviation, mutation_fitness_driven_bit_flip, 
+    )
 # Cell 1에서 정의된 함수들은 이 셀에서 바로 사용 가능합니다.
 # 예: selection_proportional, crossover_blend, mutation_random_deviation 등
 
