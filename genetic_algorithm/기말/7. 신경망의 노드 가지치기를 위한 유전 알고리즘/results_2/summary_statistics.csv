@@ -1,0 +1,6 @@
+metric,input_hidden,input_only,hidden_only
+Average Accuracy,74.08749999999999,56.205,54.2375
+Standard Deviation,42.25917523646985,30.277387051505396,29.438540922855985
+Min Value,11.07,11.19,10.79
+Max Value,98.89,75.77,73.14
+Average Pruning Rate,0.0775,0.275,0.22499999999999998
